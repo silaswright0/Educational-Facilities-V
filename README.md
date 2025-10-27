@@ -1,6 +1,6 @@
-# Efl
+# EFL
 
-## Educational Facilities Landscape
+## EFL for Educational Facilities Landscape
 
 ## Getting started
 
