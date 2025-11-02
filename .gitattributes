@@ -1,0 +1,4 @@
+# force LF line endings
+# CRLF endings cause linter errors and other unexpected problems
+
+* text=auto eol=lf

@@ -1,0 +1,1 @@
+print("Ingestor container is running!")

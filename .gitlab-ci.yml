@@ -1,0 +1,121 @@
+# Define the stages of the CI pipeline 
+stages: 
+  - build
+  - frontend_linter
+  - frontend_test
+  - backend_linter
+  #- python_analysis
+  - backend_test
+  # - test 
+  
+# Set environment variables or configuration options 
+variables: 
+  # Disable Gradle Daemon to avoid potential issues with CI  
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false" 
+  
+# Define the build stage 
+build: 
+  stage: build 
+  
+  image: eclipse-temurin 
+  # Script to execute for the build stage 
+  script: 
+    - cd backend 
+    # Execute Gradle build excluding tests 
+    - ./gradlew build -x test 
+  # Define artifacts to be preserved from this stage 
+  artifacts: 
+    paths: 
+      # Specify the path to the generated JAR file 
+      - spring/build/libs/*.jar 
+
+frontend_linter:
+  stage: frontend_linter
+  image: node:18
+  script:
+    - cd frontend
+    - npm ci
+    - npm run lint:fix
+    - npm run lint
+  rules:
+    - when: always
+  allow_failure: false
+
+frontend_test:
+  stage: frontend_test
+  image: node:18
+  script:
+    - cd frontend
+    - npm ci
+    - npm test -- --ci --coverage --passWithNoTests | tee jest.out
+    - echo "---- Jest Coverage Summary ----"
+    - grep -E "All files\\s+\\|\\s+[0-9]+(\\.[0-9]+)?\\s*\\|" -m1 jest.out || echo "No summary line found; check full Jest output above."
+  artifacts:
+    when: always
+    paths:
+      - frontend/coverage/
+      - frontend/jest.out
+  rules:
+    - when: always
+  allow_failure: false
+
+# Define the backend_linter stage 
+backend_linter: 
+  stage: backend_linter 
+  
+  image: eclipse-temurin 
+  # Script to execute for the Java analysis stage 
+  script: 
+    - cd backend 
+    # Run PMD analysis 
+    - ./gradlew pmdMain 
+    # No spotbugs since it doesn't support type 64 java class files
+  rules:
+    - when: always
+  allow_failure: false
+  
+# Define the Python analysis stage 
+#python_analysis: 
+#  stage: python_analysis 
+#  image: python:3.9 
+#  # Script to execute for the Python analysis stage 
+#  script: 
+#    - cd python 
+#    # Install Poetry 
+#    - curl -sSL https://install.python-poetry.org | python - 
+#    # Install dependencies using Poetry 
+#    - poetry install 
+#    # Run linting with Poetry 
+#    - poetry run lint 
+  
+# Define the test stage 
+#test: 
+#  stage: test 
+#  image: python:3.9 
+#  # Script to execute for the test stage 
+#  script: 
+#    - cd python 
+#    # Install Poetry 
+#    - curl -sSL https://install.python-poetry.org | python - 
+#    # Install dependencies using Poetry 
+#    - poetry install 
+#    # Run tests with Poetry 
+#    - poetry run pytest 
+  # Ensure that the pipeline fails if any errors occur during testing 
+backend_test:
+  stage: backend_test
+  image: eclipse-temurin
+  script:
+    - cd backend
+    - ./gradlew test
+  allow_failure: false
+  artifacts:
+    when: always
+    paths:
+      - backend/build/test-results/
+      - backend/build/reports/tests/
+    reports:
+      junit: backend/build/test-results/test/*.xml
+  rules: 
+    - when: always 
+  allow_failure: false
