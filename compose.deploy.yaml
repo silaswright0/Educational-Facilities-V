@@ -16,7 +16,7 @@ services:  # Defines the services that make up the application
       - TZ=Etc/UTC
       - URL=charcoal.socs.uoguelph.ca
       - VALIDATION=http
-      - STAGING=true #optional
+      - STAGING=false #optional
     volumes:
       - ./swag/config:/config
     ports:
