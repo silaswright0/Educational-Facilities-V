@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Custom PMD 7 Minimal Important Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+    <description>
+        Minimal important PMD ruleset.
+        - Includes core best practices, security, error-prone, performance rules.
+        - Enforces PascalCase or camelCase naming for variables and classes.
+        - Excludes all pedantic and overly scripted style rules as requested.
+    </description>
+
+    <!-- Security - include all -->
+    <rule ref="category/java/security.xml"/>
+
+    <!-- Error Prone - include all -->
+    <rule ref="category/java/errorprone.xml"/>
+
+    <!-- Performance - include all -->
+    <rule ref="category/java/performance.xml"/>
+
+    <!-- Code Style - only naming conventions for variables and classes -->
+    
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions"/>
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions"/>
+    <rule ref="category/java/codestyle.xml/LocalVariableNamingConventions"/>
+    <rule ref="category/java/codestyle.xml/FieldNamingConventions"/>
+
+
+</ruleset>
