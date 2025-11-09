@@ -33,11 +33,17 @@ build/
 ### VS Code ###
 .vscode/
 
+# copilot
+.github/copilot-instructions.md
+
 ### Backend bin files ###
 backend/bin/
 backend/build/
 backend/.gradle/
 
+
+### Tools venv files ###
+/tools/venv/
 
 ### React ###
 

@@ -15,10 +15,17 @@ repositories {
     jcenter()
 }
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // or 17
+    }
+}
+
 jacoco {
         toolVersion = "0.8.11"
 }
 dependencies {
+    testImplementation 'com.h2database:h2'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     runtimeOnly 'mysql:mysql-connector-java:8.0.11'

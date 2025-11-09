@@ -7,7 +7,11 @@ WORKDIR /usr/app/
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install system dependencies and Python dependencies
+RUN apt-get update && \
+    apt-get install -y default-mysql-client && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 RUN pip install -r requirements.txt
 
 # Copy the Python code into the container

@@ -17,7 +17,7 @@ variables:
 build: 
   stage: build 
   
-  image: eclipse-temurin 
+  image: eclipse-temurin:21 
   # Script to execute for the build stage 
   script: 
     - cd backend 
@@ -104,10 +104,16 @@ backend_linter:
   # Ensure that the pipeline fails if any errors occur during testing 
 backend_test:
   stage: backend_test
-  image: eclipse-temurin
+  image: eclipse-temurin:21-jdk 
   script:
     - cd backend
-    - ./gradlew test
+    - ./gradlew clean test jacocoTestReport
+    - echo ""
+    - echo "=============================="
+    - echo "    TEST COVERAGE MEASURE    "
+    - echo "=============================="
+    - grep -o '<counter type="[^"]*" missed="[0-9]*" covered="[0-9]*"/>' build/reports/jacoco/test/jacocoTestReport.xml | awk -F'"' '{m[$2]=$4;c[$2]=$6}END{for(t in m){printf "%-12s %.1f%%\n", t":", c[t]/(m[t]+c[t])*100}}'
+    - echo ""
   allow_failure: false
   artifacts:
     when: always
