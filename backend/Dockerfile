@@ -34,7 +34,7 @@
 ##########
 # Build
 ##########
-FROM gradle:8.5-jdk17 AS build
+FROM gradle:8.9.0-jdk21 AS build
 WORKDIR /app
 
 # Wrapper + build files (only the ones that exist)
@@ -54,7 +54,7 @@ RUN --mount=type=cache,target=/home/gradle/.gradle \
 ##########
 # Runtime (multi-arch)
 ##########
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 COPY --from=build /app/build/libs/notes-app-1.0.jar app.jar
 EXPOSE 8080

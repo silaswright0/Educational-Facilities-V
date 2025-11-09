@@ -34,6 +34,8 @@ services:  # Defines the services that make up the application
     #Ports: ports: - "8080:8080" maps port 8080 of the container to port 8080 on the host, allowing external access to the Spring application running inside the container.
     ports:
       - "8080:8080"  # Exposes port 8080 on the host and maps it to port 8080 in the container
+    depends_on:
+      - database
     #Environment Variables: These are passed to the container at runtime. For example, DB_ADDRESS is set to jdbc:mysql://mysql:3306, indicating the application should connect to a MySQL database at the given JDBC URL.
     environment:  # Environment variables for the Spring application
       - DB_ADDRESS=jdbc:mysql://database:3306  # JDBC URL for the MySQL database, 'mysql' is the service name in docker-compose
@@ -68,6 +70,22 @@ services:  # Defines the services that make up the application
     networks:  # Network the React service is connected to
       - backend-frontend  # Network for communicating with the backend service
       - swag-frontend # Network to allow reverse proxy to communicate with frontend
+
+  ingestor:
+    build: ./ingestor
+    container_name: python_ingestor
+    depends_on:
+      - database
+    environment:
+      - DB_HOST=database
+      - DB_DATABASE=template_db
+      - DB_USER=root
+      - DB_PASSWORD=pwd
+    volumes:
+      - ./ingestor/data:/usr/app/data
+    networks:
+      - backend-database
+    restart: unless-stopped
 volumes:
   mariadb_data:  # Defines a named volume 'mariadb_data' for the MySQL service to use for data persistence
 
