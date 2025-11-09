@@ -18,9 +18,24 @@ class EducationalFacilityIngestor:
             'database': os.environ.get('DB_DATABASE', 'template_db')
         }
 
+    def table_exists(self, conn, table_name):
+        """Check if the specified table exists in the database."""
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                SELECT COUNT(*)
+                FROM information_schema.tables
+                WHERE table_schema = %s
+                AND table_name = %s
+            """, (self.db_config['database'], table_name))
+            return cursor.fetchone()[0] > 0
+        finally:
+            cursor.close()
+
     def connect_to_db(self, max_retries=30, delay=2):
         """
         Attempt to connect to the database with retries and exponential backoff.
+        Also verifies that the required table exists.
         """
         import time
         attempt = 0
@@ -29,12 +44,22 @@ class EducationalFacilityIngestor:
         while attempt < max_retries:
             try:
                 logger.info(f"Attempting to connect to database (attempt {attempt + 1}/{max_retries})")
-                return mysql.connector.connect(**self.db_config)
+                conn = mysql.connector.connect(**self.db_config)
+                
+                # Check if the table exists
+                if self.table_exists(conn, 'educational_facility'):
+                    logger.info("Successfully connected and verified table existence")
+                    return conn
+                else:
+                    logger.warning("Table 'educational_facility' does not exist yet")
+                    conn.close()
+                    raise mysql.connector.Error("Table 'educational_facility' does not exist")
+                    
             except mysql.connector.Error as err:
                 last_error = err
                 attempt += 1
                 wait_time = delay * (2 ** (attempt - 1))  # exponential backoff
-                logger.warning(f"Failed to connect to database: {err}. Retrying in {wait_time} seconds...")
+                logger.warning(f"Failed to connect or verify table: {err}. Retrying in {wait_time} seconds...")
                 time.sleep(wait_time)
         
         logger.error(f"Failed to connect to database after {max_retries} attempts: {last_error}")
