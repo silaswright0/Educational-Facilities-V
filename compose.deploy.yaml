@@ -53,6 +53,11 @@ services:  # Defines the services that make up the application
     environment:  # Environment variables for the MySQL service
       - MYSQL_ROOT_PASSWORD=pwd  # The root password for MySQL
       - MYSQL_DATABASE=template_db  # The database to create when the container starts
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppwd"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     #Volumes: volumes: - mariadb_data:/var/lib/mysql mounts the named volume mariadb_data to /var/lib/mysql inside the container, providing persistent storage for the database.
     volumes:  # Persistent storage for the MySQL database
       - mariadb_data:/var/lib/mysql  # Maps 'mariadb_data' volume to the data directory of MySQL
@@ -75,7 +80,8 @@ services:  # Defines the services that make up the application
     build: ./ingestor
     container_name: python_ingestor
     depends_on:
-      - database
+      database:
+        condition: service_healthy
     environment:
       - DB_HOST=database
       - DB_DATABASE=template_db
