@@ -1,45 +1,102 @@
-import React from 'react';
 import './App.css';
 
-const App: React.FC = () => (
-  <div className="App">
-    <header className="App-header">
-      <h1>Educational Facilities Landscape (Canada-wide)</h1>
-      <p>
-        Across Canada, billions of dollars are invested every year in education, yet
-        decision-makers still lack a clear picture of where educational resources exist,
-        and where they don’t.
-      </p>
+import { useEffect, useState } from 'react';
 
-      <p>
-        The Educational Facilities Explorer is a data-driven analytics platform that
-        visualizes the distribution of schools, colleges, and training institutions
-        across Canada using interactive maps and comparative charts.
-      </p>
+import getAllFacilities from './services/facilitiesService';
 
-      <p>
-        Our platform transforms fragmented public datasets into meaningful insights that
-        reveal regional disparities, infrastructure gaps, and underserved communities.
-      </p>
+interface Facility {
+  id: number;
+  facilityName: string;
+  authorityName: string;
+  address: string;
+  unit: string;
+  postalCode: string;
+  municipalityName: string;
+  sourceId: string;
+  minGrade: string;
+  maxGrade: string;
+  facilityType: string;
+  province: string;
+  censusDivisionName: string;
+  censusDivisionId: string;
+  geometry: string;
+  languageMinorityStatus: boolean;
+  frenchImmersion: boolean;
+  earlyImmersion: boolean;
+  middleImmersion: boolean;
+  lateImmersion: boolean;
+}
 
-      <p>
-        Unlike static government reports or raw spreadsheets that require technical
-        expertise, our product delivers instant geographic intelligence through intuitive
-        filtering, location search, and province-to-province comparison tools.
-      </p>
+const App: React.FC = () => {
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [facilitiesView, setShowFacilities] = useState(false);
 
-      <p>
-        We are starting with education, but our platform is designed to scale to
-        healthcare, housing, and public services, creating a foundation for smarter
-        infrastructure planning nationwide.
-      </p>
+  useEffect(() => {
+    getAllFacilities()
+      .then((data) => setFacilities(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
 
+  const toggleView = (): void => {
+    setShowFacilities((prev) => !prev);
+  };
+
+  if (loading) {
+    return <h1>Loading facilities...</h1>;
+  }
+
+  if (error) {
+    return (
       <p>
-        We are seeking collaborators and early investment partners to build this
-        essential tool for public-sector analytics and informed decision-making.
+        Error:&nbsp;
+        {error}
       </p>
-    </header>
-  </div>
-);
+    );
+  }
+
+  let content;
+
+  if (!facilitiesView) {
+    content = <p>wow map :)</p>;
+  } else if (facilities.length === 0) {
+    content = <p>No facilities found.</p>;
+  } else {
+    content = (
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Municipality</th>
+            <th>Province</th>
+          </tr>
+        </thead>
+        <tbody>
+          {facilities.map((facility) => (
+            <tr key={facility.id}>
+              <td>{facility.facilityName}</td>
+              <td>{facility.facilityType}</td>
+              <td>{facility.municipalityName}</td>
+              <td>{facility.province}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+
+  return (
+    <div className="App">
+      <h1>Educational Facilities Landscape</h1>
+      <button type="button" onClick={toggleView}>
+        {facilitiesView ? 'Show Map' : 'Show Facilities'}
+      </button>
+      {content}
+    </div>
+  );
+};
 
 export default App;
