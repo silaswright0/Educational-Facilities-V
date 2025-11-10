@@ -24,8 +24,10 @@ services:  # Defines the services that make up the application
       - 80:80 #optional
     depends_on:
       - frontend
+      - backend
     networks:
       - swag-frontend
+      - backend-frontend
     restart: unless-stopped
 
   backend:  # The Spring application service
