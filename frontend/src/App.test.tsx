@@ -1,46 +1,164 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import {
+  render, screen, waitFor, within,
+} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { act } from 'react-dom/test-utils';
 
 import App from './App';
+import * as facilitiesService from './services/facilitiesService';
 
 // Mock the API service
 jest.mock('./services/facilitiesService', () => ({
   __esModule: true,
   default: jest.fn(),
+  getFacilitiesByProvince: jest.fn(),
 }));
 
-import getAllFacilities from './services/facilitiesService';
-
 describe('App component', () => {
-  it('renders loading state, then facilities table', async () => {
-    // Mock data
-    const mockFacilities = [
-      { id: 1, facilityName: 'Test Facility', facilityType: 'School', municipalityName: 'Toronto', province: 'ON' },
-    ];
-
-    (getAllFacilities as jest.Mock).mockResolvedValue(mockFacilities);
-
-    await act(async () => {
-      render(<App />);
-    });
-
-    // Step 1: check loading state
-    expect(screen.getByRole('heading')).toBeInTheDocument();
-
-    // Step 2: wait for button after mock resolves
-    await waitFor(() => expect(screen.getByRole('button')).toBeInTheDocument());
-    expect(screen.getByRole('button')).toBeInTheDocument();
+  beforeEach(() => {
+    jest.resetAllMocks();
   });
 
-  it('renders error state if fetch fails', async () => {
-    (getAllFacilities as jest.Mock).mockRejectedValue(new Error('Network error'));
+  it('loads facilities and shows UI controls', async () => {
+    const mockFacilities = [
+      {
+        id: 1, facilityName: 'Facility A', facilityType: 'School', municipalityName: 'Toronto', province: 'ON',
+      },
+      {
+        id: 2, facilityName: 'Facility B', facilityType: 'College', municipalityName: 'Montreal', province: 'QC',
+      },
+    ];
+
+    (facilitiesService.default as jest.Mock).mockResolvedValue(mockFacilities);
 
     await act(async () => {
       render(<App />);
     });
 
-    await waitFor(() => expect(screen.getByText(/error/i)).toBeInTheDocument());
-    expect(screen.getByText(/network error/i)).toBeInTheDocument();
+    // Wait for the toggle button to appear (indicates load finished)
+    await waitFor(() => expect(screen.getByRole('button', { name: /show facilities/i })).toBeInTheDocument());
+
+    // Filter controls should be present
+    expect(screen.getByLabelText(/Filter by province\/territory/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /clear/i })).toBeInTheDocument();
+  });
+
+  it('filters facilities by selected province and clears filter', async () => {
+    const allMockFacilities = [
+      {
+        id: 1, facilityName: 'Facility A', facilityType: 'School', municipalityName: 'Toronto', province: 'ON',
+      },
+      {
+        id: 2, facilityName: 'Facility B', facilityType: 'College', municipalityName: 'Ottawa', province: 'ON',
+      },
+      {
+        id: 3, facilityName: 'Facility C', facilityType: 'School', municipalityName: 'Vancouver', province: 'BC',
+      },
+    ];
+
+    const onMockFacilities = [
+      {
+        id: 1, facilityName: 'Facility A', facilityType: 'School', municipalityName: 'Toronto', province: 'ON',
+      },
+      {
+        id: 2, facilityName: 'Facility B', facilityType: 'College', municipalityName: 'Ottawa', province: 'ON',
+      },
+    ];
+
+    (facilitiesService.default as jest.Mock).mockImplementation(
+      () => Promise.resolve(allMockFacilities),
+    );
+    (facilitiesService.getFacilitiesByProvince as jest.Mock).mockImplementation(
+      () => Promise.resolve(onMockFacilities),
+    );
+
+    render(<App />);
+
+    // Wait for initial load to complete
+    await waitFor(() => {
+      expect(facilitiesService.default).toHaveBeenCalledTimes(1);
+    });
+
+    // Show facilities view
+    const toggle = await screen.findByRole('button', { name: /show facilities/i });
+    await userEvent.click(toggle);
+
+    // Wait for table to render with all facilities
+    await waitFor(() => {
+      const table = screen.getByRole('table');
+      const rowgroups = within(table).getAllByRole('rowgroup');
+      const tbody = rowgroups.find((rg) => rg.tagName === 'TBODY') ?? rowgroups[1];
+      const rowsBefore = within(tbody).getAllByRole('row');
+      expect(rowsBefore.length).toBe(3);
+    });
+
+    // Select province 'ON' - this should trigger API call
+    const select = screen.getByLabelText(/Filter by province\/territory/i) as HTMLSelectElement;
+    await act(async () => {
+      await userEvent.selectOptions(select, 'ON');
+      // Wait a tick for promise to resolve
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+    });
+
+    // Wait for the API mock to be called with 'ON' and table to update
+    await waitFor(() => {
+      expect(facilitiesService.getFacilitiesByProvince).toHaveBeenCalledWith('ON');
+    });
+
+    await waitFor(() => {
+      const table = screen.getByRole('table');
+      const rowgroups = within(table).getAllByRole('rowgroup');
+      const tbody = rowgroups.find((rg) => rg.tagName === 'TBODY') ?? rowgroups[1];
+      const rowsAfter = within(tbody).getAllByRole('row');
+      expect(rowsAfter.length).toBe(2);
+    });
+
+    // Verify that the displayed province cells are 'ON'
+    await waitFor(() => {
+      const table = screen.getByRole('table');
+      const provinceCells = within(table).getAllByText('ON');
+      expect(provinceCells.length).toBe(2);
+    });
+
+    // Clear filter and expect to see all rows again
+    const clearBtn = screen.getByRole('button', { name: /clear/i });
+    await act(async () => {
+      await userEvent.click(clearBtn);
+      // Wait a tick for promise to resolve
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+    });
+
+    // Wait for the API mock to be called (getAllFacilities on clear)
+    await waitFor(() => {
+      expect(facilitiesService.default).toHaveBeenCalledTimes(2); // initial load + clear
+    });
+
+    await waitFor(() => {
+      const table = screen.getByRole('table');
+      const rowgroups = within(table).getAllByRole('rowgroup');
+      const tbody = rowgroups.find((rg) => rg.tagName === 'TBODY') ?? rowgroups[1];
+      const rowsCleared = within(tbody).getAllByRole('row');
+      expect(rowsCleared.length).toBe(3);
+    });
+
+    // Verify getAllFacilities was called when clearing
+    expect(facilitiesService.default).toHaveBeenCalledTimes(2); // initial load + clear
+    expect(facilitiesService.getFacilitiesByProvince).toHaveBeenCalledWith('ON');
+  });
+
+  it('handles empty results and shows message', async () => {
+    (facilitiesService.default as jest.Mock).mockResolvedValue([]);
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    // Show facilities view
+    const toggle = screen.getByRole('button', { name: /show facilities/i });
+    await userEvent.click(toggle);
+
+    // Expect the empty state message
+    await waitFor(() => expect(screen.getByText(/no facilities found/i)).toBeInTheDocument());
   });
 });
