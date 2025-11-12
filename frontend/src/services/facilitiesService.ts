@@ -12,3 +12,13 @@ export default async function getAllFacilities() {
 
   return response.json();
 }
+
+export async function getFacilitiesByProvince(province: string) {
+  const url = `${API_BASE}/province/${province}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+}

@@ -2,7 +2,7 @@ import './App.css';
 
 import { useEffect, useState } from 'react';
 
-import getAllFacilities from './services/facilitiesService';
+import getAllFacilities, { getFacilitiesByProvince } from './services/facilitiesService';
 
 interface Facility {
   id: number;
@@ -32,6 +32,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [facilitiesView, setShowFacilities] = useState(false);
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [filterLoading, setFilterLoading] = useState(false);
 
   useEffect(() => {
     getAllFacilities()
@@ -42,6 +44,53 @@ const App: React.FC = () => {
 
   const toggleView = (): void => {
     setShowFacilities((prev) => !prev);
+  };
+
+  const provinces: { code: string; name: string }[] = [
+    { code: '', name: 'All provinces/territories' },
+    { code: 'AB', name: 'Alberta' },
+    { code: 'BC', name: 'British Columbia' },
+    { code: 'MB', name: 'Manitoba' },
+    { code: 'NB', name: 'New Brunswick' },
+    { code: 'NL', name: 'Newfoundland and Labrador' },
+    { code: 'NS', name: 'Nova Scotia' },
+    { code: 'NT', name: 'Northwest Territories' },
+    { code: 'NU', name: 'Nunavut' },
+    { code: 'ON', name: 'Ontario' },
+    { code: 'PE', name: 'Prince Edward Island' },
+    { code: 'QC', name: 'Quebec' },
+    { code: 'SK', name: 'Saskatchewan' },
+    { code: 'YT', name: 'Yukon' },
+  ];
+
+  const onProvinceChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    const provinceCode = e.target.value;
+    setSelectedProvince(provinceCode);
+
+    if (provinceCode === '') {
+      // Load all facilities
+      setFilterLoading(true);
+      getAllFacilities()
+        .then((data) => setFacilities(data))
+        .catch((err) => setError(err.message))
+        .finally(() => setFilterLoading(false));
+    } else {
+      // Load facilities for selected province
+      setFilterLoading(true);
+      getFacilitiesByProvince(provinceCode)
+        .then((data) => setFacilities(data))
+        .catch((err) => setError(err.message))
+        .finally(() => setFilterLoading(false));
+    }
+  };
+
+  const clearProvinceFilter = (): void => {
+    setSelectedProvince('');
+    setFilterLoading(true);
+    getAllFacilities()
+      .then((data) => setFacilities(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setFilterLoading(false));
   };
 
   if (loading) {
@@ -61,11 +110,13 @@ const App: React.FC = () => {
 
   if (!facilitiesView) {
     content = <p>wow map :)</p>;
+  } else if (filterLoading) {
+    content = <p>Loading facilities...</p>;
   } else if (facilities.length === 0) {
     content = <p>No facilities found.</p>;
   } else {
     content = (
-      <table>
+      <table className="facilities-table">
         <thead>
           <tr>
             <th>Name</th>
@@ -91,10 +142,27 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <h1>Educational Facilities Landscape</h1>
-      <button type="button" onClick={toggleView}>
-        {facilitiesView ? 'Show Map' : 'Show Facilities'}
-      </button>
-      {content}
+      <div className="facilities-container">
+        <div className="filter-controls">
+          <label htmlFor="province-select">Filter by province/territory:&nbsp;</label>
+          <select id="province-select" value={selectedProvince} onChange={onProvinceChange}>
+            {provinces.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={clearProvinceFilter}>
+            Clear
+          </button>
+        </div>
+
+        <button type="button" onClick={toggleView}>
+          {facilitiesView ? 'Show Map' : 'Show Facilities'}
+        </button>
+
+        {content}
+      </div>
     </div>
   );
 };
