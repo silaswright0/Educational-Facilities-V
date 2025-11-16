@@ -5,6 +5,8 @@ import com.efl.facilities.services.FacilityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.efl.facilities.models.validation.FacilityValidationResult;
+import com.efl.facilities.services.FacilityValidationService;
 
 import java.util.List;
 
@@ -15,6 +17,9 @@ public class FacilityController {
 
     @Autowired
     private FacilityService facilityService;
+
+    @Autowired
+    private FacilityValidationService facilityValidationService;
 
     @GetMapping
     public List<Facility> getAllFacilities() {
@@ -52,5 +57,10 @@ public class FacilityController {
     @GetMapping("/french-immersion")
     public List<Facility> getFrenchImmersionFacilities() {
         return facilityService.getFrenchImmersionFacilities();
+    }
+
+    @GetMapping("/validate")
+    public FacilityValidationResult validateFacilities() {
+        return facilityValidationService.validateFacilities();
     }
 }
