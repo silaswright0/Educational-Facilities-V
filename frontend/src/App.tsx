@@ -2,6 +2,9 @@ import './App.css';
 
 import { useEffect, useState } from 'react';
 
+import 'leaflet/dist/leaflet.css';
+
+import MapView from './Map';
 import getAllFacilities, { getFacilitiesByProvince } from './services/facilitiesService';
 
 interface Facility {
@@ -45,6 +48,16 @@ const App: React.FC = () => {
   const toggleView = (): void => {
     setShowFacilities((prev) => !prev);
   };
+
+  /* useEffect(() => {
+    // cheat to refresh page to ensure points appear
+    setTimeout(() => {
+      if (!sessionStorage.getItem('reloaded')) {
+        sessionStorage.setItem('reloaded', 'true');
+        window.location.reload();
+      }
+    }, 3000);
+  }, []); */
 
   const provinces: { code: string; name: string }[] = [
     { code: '', name: 'All provinces/territories' },
@@ -109,40 +122,14 @@ const App: React.FC = () => {
   let content;
 
   if (!facilitiesView) {
-    content = <p>wow map :)</p>;
+    content = <MapView facilities={facilities} />;
   } else if (filterLoading) {
     content = <p>Loading facilities...</p>;
   } else if (facilities.length === 0) {
     content = <p>No facilities found.</p>;
   } else {
     content = (
-      <table className="facilities-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Municipality</th>
-            <th>Province</th>
-          </tr>
-        </thead>
-        <tbody>
-          {facilities.map((facility) => (
-            <tr key={facility.id}>
-              <td>{facility.facilityName}</td>
-              <td>{facility.facilityType}</td>
-              <td>{facility.municipalityName}</td>
-              <td>{facility.province}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }
-
-  return (
-    <div className="App">
-      <h1>Educational Facilities Landscape</h1>
-      <div className="facilities-container">
+      <div>
         <div className="filter-controls">
           <label htmlFor="province-select">Filter by province/territory:&nbsp;</label>
           <select id="province-select" value={selectedProvince} onChange={onProvinceChange}>
@@ -156,10 +143,40 @@ const App: React.FC = () => {
             Clear
           </button>
         </div>
+        <table className="facilities-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Municipality</th>
+              <th>Province</th>
+            </tr>
+          </thead>
+          <tbody>
+            {facilities.map((facility) => (
+              <tr key={facility.id}>
+                <td>{facility.facilityName}</td>
+                <td>{facility.facilityType}</td>
+                <td>{facility.municipalityName}</td>
+                <td>{facility.province}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  return (
+    <div className="App">
+      <h1>Educational Facilities Landscape</h1>
+      <div className="facilities-container">
 
         <button type="button" onClick={toggleView}>
           {facilitiesView ? 'Show Map' : 'Show Facilities'}
         </button>
+
+        <br />
 
         {content}
       </div>
