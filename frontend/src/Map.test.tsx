@@ -32,7 +32,6 @@ interface Facility {
 
 // --- Mock Leaflet and MarkerCluster ---
 
-// We define mocks inside the factory to ensure proper scope and hoisting.
 jest.mock('leaflet', () => {
   // 1. Define the Mock Map Instance
   const mapInstance = {
@@ -69,7 +68,6 @@ jest.mock('leaflet', () => {
   };
 
   // 4. Create the Mock Object
-  // We define 'map' as a jest function that returns mapInstance.
   const LMock = {
     map: jest.fn(() => mapInstance),
     tileLayer: jest.fn(() => ({ addTo: jest.fn() })),
@@ -85,7 +83,7 @@ jest.mock('leaflet', () => {
   return {
     __esModule: true,
     default: LMock,
-    ...LMock, // Spread named exports so 'import * as L' works
+    ...LMock,
   };
 });
 
@@ -105,11 +103,10 @@ import MapView from './Map';
 
 // --- Access Mocks ---
 
-// Retrieve the mocked instances using require to access the specific factory objects
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LeafletMock = require('leaflet').default;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { __mockMap } = require('leaflet');
+const { __mockMap, __mockCircleMarker } = require('leaflet');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { markerClusterGroup, __mockMarkerClusterGroup } = require('leaflet.markercluster');
 
@@ -131,11 +128,24 @@ const mockFacilities: Partial<Facility>[] = [
 // --- Tests ---
 
 describe('MapView', () => {
-  // Fix for "Cannot read properties of undefined (reading 'setView')"
-  // This ensures L.map() returns the mock object even if Jest resets mocks between tests.
+  // Ensure mocks return valid objects even if Jest resets them between tests
   beforeEach(() => {
+    // 1. Fix L.map
     LeafletMock.map.mockReturnValue(__mockMap);
-    __mockMap.setView.mockReturnThis(); // Ensure chaining works
+
+    // 2. Fix L.tileLayer (This resolves the 'addTo' undefined error)
+    LeafletMock.tileLayer.mockReturnValue({
+      addTo: jest.fn(),
+    });
+
+    // 3. Fix L.circleMarker (This resolves potential bindPopup errors)
+    LeafletMock.circleMarker.mockReturnValue(__mockCircleMarker);
+
+    // 4. Ensure chaining methods return 'this'
+    __mockMap.setView.mockReturnThis();
+    __mockMap.addLayer.mockReturnThis();
+    __mockMap.fitBounds.mockReturnThis();
+    __mockCircleMarker.bindPopup.mockReturnThis();
   });
 
   it('renders the map container div', () => {
@@ -147,7 +157,6 @@ describe('MapView', () => {
   });
 
   it('initializes the Leaflet map on first render', () => {
-    // Clear specific calls without resetting the implementation
     LeafletMock.map.mockClear();
     __mockMap.setView.mockClear();
     LeafletMock.tileLayer.mockClear();
