@@ -102,7 +102,7 @@ jest.mock('leaflet.markercluster', () => {
 
 // --- Import Component ---
 // Must import after mocks
-import MapView from '../MapView';
+import MapView from './Map';
 
 // --- Setup Test Helpers ---
 
