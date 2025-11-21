@@ -32,15 +32,14 @@ interface Facility {
 
 // --- Mock Leaflet and MarkerCluster ---
 
-// We define the mocks INSIDE the jest.mock factory to avoid ReferenceErrors due to hoisting.
+// We define mocks inside the factory to ensure proper scope and hoisting.
 jest.mock('leaflet', () => {
-  // 1. Define the Mock Map
+  // 1. Define the Mock Map Instance
   const mapInstance = {
     setView: jest.fn().mockReturnThis(),
     addLayer: jest.fn().mockReturnThis(),
     removeLayer: jest.fn().mockReturnThis(),
     fitBounds: jest.fn().mockReturnThis(),
-    // Break long type definition to satisfy max-len
     eachLayer: jest.fn(
       (
         callback: (
@@ -50,7 +49,7 @@ jest.mock('leaflet', () => {
         const mockMarkerLayer = {
           options: { pane: 'markerPane' },
           _leaflet_id: 1,
-        } as unknown as L.Layer; // Cast minimal shape
+        } as unknown as L.Layer;
         callback(mockMarkerLayer);
       }
     ),
@@ -69,7 +68,8 @@ jest.mock('leaflet', () => {
     pad: jest.fn().mockReturnThis(),
   };
 
-  // 4. Construct the default export
+  // 4. Create the Mock Object
+  // We define 'map' as a jest function that returns mapInstance.
   const LMock = {
     map: jest.fn(() => mapInstance),
     tileLayer: jest.fn(() => ({ addTo: jest.fn() })),
@@ -77,7 +77,7 @@ jest.mock('leaflet', () => {
     circleMarker: jest.fn(() => circleMarkerInstance),
     Map: jest.fn(),
     Layer: jest.fn(),
-    // Expose internals for testing assertions
+    // Expose internals for test assertions
     __mockMap: mapInstance,
     __mockCircleMarker: circleMarkerInstance,
   };
@@ -85,7 +85,7 @@ jest.mock('leaflet', () => {
   return {
     __esModule: true,
     default: LMock,
-    ...LMock,
+    ...LMock, // Spread named exports so 'import * as L' works
   };
 });
 
@@ -101,14 +101,11 @@ jest.mock('leaflet.markercluster', () => {
 });
 
 // --- Import Component ---
-// Must import after mocks
 import MapView from './Map';
 
-// --- Setup Test Helpers ---
+// --- Access Mocks ---
 
-// Retrieve the mocked instances exposed by the factories above.
-// We use explicit requires here to access the specific mock objects created inside the factory.
-
+// Retrieve the mocked instances using require to access the specific factory objects
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const LeafletMock = require('leaflet').default;
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -134,6 +131,13 @@ const mockFacilities: Partial<Facility>[] = [
 // --- Tests ---
 
 describe('MapView', () => {
+  // Fix for "Cannot read properties of undefined (reading 'setView')"
+  // This ensures L.map() returns the mock object even if Jest resets mocks between tests.
+  beforeEach(() => {
+    LeafletMock.map.mockReturnValue(__mockMap);
+    __mockMap.setView.mockReturnThis(); // Ensure chaining works
+  });
+
   it('renders the map container div', () => {
     render(<MapView facilities={[]} />);
     const mapElement = screen.getByRole('generic', { name: /map/i });
@@ -143,6 +147,7 @@ describe('MapView', () => {
   });
 
   it('initializes the Leaflet map on first render', () => {
+    // Clear specific calls without resetting the implementation
     LeafletMock.map.mockClear();
     __mockMap.setView.mockClear();
     LeafletMock.tileLayer.mockClear();
@@ -159,7 +164,6 @@ describe('MapView', () => {
     __mockMarkerClusterGroup.addLayer.mockClear();
     __mockMap.addLayer.mockClear();
 
-    // Break long line for max-len
     render(
       <MapView facilities={mockFacilities as Facility[]} />
     );
@@ -180,7 +184,6 @@ describe('MapView', () => {
   it('calls map.fitBounds when facilities are present', () => {
     __mockMap.fitBounds.mockClear();
 
-    // Break long line for max-len
     render(
       <MapView facilities={mockFacilities as Facility[]} />
     );
