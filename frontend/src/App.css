@@ -48,13 +48,12 @@
   color: #61dafb;
 }
 
-/* Facilities list and filter styling */
 .facilities-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  margin: 1rem auto;
+  margin: 0.5rem auto 2rem auto;
   width: 95%;
   max-width: 1100px;
   height: 100%;
@@ -62,21 +61,47 @@
 
 .filter-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+  justify-content: flex-start;
+  gap: 0.35rem 0.6rem;
   margin-bottom: 1rem;
+  width: 100%;
+}
+
+.filter-controls label {
+  margin-right: -0.45rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .filter-controls select {
-  min-width: 220px;
-  padding: 0.25rem 0.5rem;
+  min-width: 145px;
+  max-width: 180px;
+  padding: 0.18rem 0.3rem;
+  font-size: 0.9rem;
+  margin-right: 0.95rem;
+}
+
+.filter-controls button {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
+
+.filter-controls button:hover {
+  background-color: #f0f0f0;
 }
 
 .facilities-table {
-  margin: 1rem auto;
+  margin: 0.5rem auto 1rem auto;
   border-collapse: collapse;
   width: 100%;
+  font-size: 0.9rem;
 }
 
 .facilities-table th,
@@ -86,12 +111,35 @@
   text-align: left;
 }
 
+.facilities-table th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
 @media (max-width: 600px) {
   .filter-controls {
     flex-direction: column;
-    gap: 0.25rem;
+    align-items: flex-start;
+    gap: 0.35rem;
   }
+
   .filter-controls select {
-    min-width: 80%;
+    min-width: 100%;
   }
+}
+
+.toggle-view-btn {
+  margin: 0 0 0.75rem 0;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.95rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #f7f7f7;
+  cursor: pointer;
+  display: block;
+  align-self: center;
+}
+
+.toggle-view-btn:hover {
+  background-color: #efefef;
 }

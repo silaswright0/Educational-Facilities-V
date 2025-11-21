@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import './Map.css';
 
@@ -47,23 +47,18 @@ function parseWktPoint(wkt: string): [number, number] | null {
 }
 
 const MapView: React.FC<MapViewProps> = ({ facilities }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el || mapRef.current) return;
+  useEffect(() => {
+    if (!mapRef.current) {
+      mapRef.current = L.map('map').setView([56, -96], 4); // Canada view
 
-    const map = L.map(el).setView([56, -96], 4);
-    mapRef.current = map;
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+      }).addTo(mapRef.current);
+    }
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map);
-
-    // Force size after initial render
-    setTimeout(() => map.invalidateSize(), 0);
-
+    const map = mapRef.current;
     map.eachLayer((layer: L.Layer) => {
       const layerWithMaybePane = layer as L.Layer & {
         options?: Partial<{ pane: string }>;
@@ -101,9 +96,13 @@ const MapView: React.FC<MapViewProps> = ({ facilities }) => {
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [50, 50] });
     }
+
+    return () => {
+      // Do NOT remove map on rerenders
+    };
   }, [facilities]);
 
-  return <div ref={containerRef} className="map" />;
+  return <div id="map" className="map" />;
 };
 
 export default MapView;
