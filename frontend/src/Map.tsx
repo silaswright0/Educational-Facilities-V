@@ -35,7 +35,7 @@ interface Facility {
 interface MapViewProps {
   facilities: Facility[];
 }
-function parseWktPoint(wkt: string): [number, number] | null {
+export function parseWktPoint(wkt: string): [number, number] | null {
   // Example input: "POINT (-53.9840877 47.7650123)"
   const match = wkt.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
   if (!match) return null;
