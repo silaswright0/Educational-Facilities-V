@@ -53,7 +53,23 @@ public class FacilityValidationService {
         FacilityValidationResult result = new FacilityValidationResult();
         result.setTotalRecords(facilities.size());
 
-        // Count uniqueId occurrences
+        Map<String, Integer> uniqueIdCounts = countUniqueIds(facilities);
+        Set<String> duplicateUniqueIds = extractDuplicateUniqueIds(uniqueIdCounts);
+
+        ValidationCounters counters =
+                validateFacilitiesAndCountIssues(facilities, duplicateUniqueIds, result);
+
+        result.setMissingFieldCount(counters.missingFieldCount);
+        result.setDuplicateUniqueIdCount(counters.duplicateCount);
+        result.setInvalidProvinceCount(counters.invalidProvinceCount);
+        result.setInvalidCoordinateCount(counters.invalidCoordinateCount);
+
+        result.setValid(result.getIssues().isEmpty());
+
+        return result;
+    }
+
+    private Map<String, Integer> countUniqueIds(List<Facility> facilities) {
         Map<String, Integer> uniqueIdCounts = new HashMap<>();
         for (Facility facility : facilities) {
             String uniqueId = safeTrim(facility.getUniqueId());
@@ -61,90 +77,118 @@ public class FacilityValidationService {
                 uniqueIdCounts.merge(uniqueId, 1, Integer::sum);
             }
         }
+        return uniqueIdCounts;
+    }
 
-        Set<String> duplicateUniqueIds = uniqueIdCounts.entrySet().stream()
+    private Set<String> extractDuplicateUniqueIds(Map<String, Integer> uniqueIdCounts) {
+        return uniqueIdCounts.entrySet().stream()
                 .filter(e -> e.getValue() > 1)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
+    }
 
-        int missingFieldCount = 0;
-        int duplicateCount = 0;
-        int invalidProvinceCount = 0;
-        int invalidCoordinateCount = 0;
+    private ValidationCounters validateFacilitiesAndCountIssues(
+            List<Facility> facilities,
+            Set<String> duplicateUniqueIds,
+            FacilityValidationResult result
+    ) {
+        ValidationCounters counters = new ValidationCounters();
 
         for (Facility facility : facilities) {
-            boolean missing = false;
-
-            // Missing critical fields
-            if (isBlank(facility.getUniqueId())) {
-                result.addIssue(new FacilityValidationIssue(
-                        facility,
-                        "MISSING_FIELD",
-                        "Missing uniqueId"
-                ));
-                missing = true;
-            }
-            if (isBlank(facility.getFacilityName())) {
-                result.addIssue(new FacilityValidationIssue(
-                        facility,
-                        "MISSING_FIELD",
-                        "Missing facilityName"
-                ));
-                missing = true;
-            }
-            if (isBlank(facility.getProvince())) {
-                result.addIssue(new FacilityValidationIssue(
-                        facility,
-                        "MISSING_FIELD",
-                        "Missing province"
-                ));
-                missing = true;
-            }
-            if (missing) {
-                missingFieldCount++;
+            if (hasMissingCriticalFields(facility, result)) {
+                counters.missingFieldCount++;
             }
 
-            // Duplicate uniqueId
-            String uniqueId = safeTrim(facility.getUniqueId());
-            if (uniqueId != null && duplicateUniqueIds.contains(uniqueId)) {
-                result.addIssue(new FacilityValidationIssue(
-                        facility,
-                        "DUPLICATE_UNIQUE_ID",
-                        "Duplicate uniqueId: " + uniqueId
-                ));
-                duplicateCount++;
+            if (hasDuplicateUniqueId(facility, duplicateUniqueIds, result)) {
+                counters.duplicateCount++;
             }
 
-            // Invalid province
-            String province = safeTrim(facility.getProvince());
-            if (province != null && !VALID_PROVINCES.contains(province)) {
-                result.addIssue(new FacilityValidationIssue(
-                        facility,
-                        "INVALID_PROVINCE",
-                        "Invalid province code: " + province
-                ));
-                invalidProvinceCount++;
+            if (hasInvalidProvince(facility, result)) {
+                counters.invalidProvinceCount++;
             }
 
-            // Invalid coordinates (optional, but useful)
-            if (hasInvalidCoordinates(facility)) {
-                result.addIssue(new FacilityValidationIssue(
-                        facility,
-                        "INVALID_COORDINATES",
-                        "Invalid or incomplete latitude/longitude"
-                ));
-                invalidCoordinateCount++;
+            if (hasInvalidCoordinatesAndReport(facility, result)) {
+                counters.invalidCoordinateCount++;
             }
         }
 
-        result.setMissingFieldCount(missingFieldCount);
-        result.setDuplicateUniqueIdCount(duplicateCount);
-        result.setInvalidProvinceCount(invalidProvinceCount);
-        result.setInvalidCoordinateCount(invalidCoordinateCount);
+        return counters;
+    }
 
-        result.setValid(result.getIssues().isEmpty());
+    private boolean hasMissingCriticalFields(Facility facility, FacilityValidationResult result) {
+        boolean missing = false;
 
-        return result;
+        if (isBlank(facility.getUniqueId())) {
+            result.addIssue(new FacilityValidationIssue(
+                    facility,
+                    "MISSING_FIELD",
+                    "Missing uniqueId"
+            ));
+            missing = true;
+        }
+        if (isBlank(facility.getFacilityName())) {
+            result.addIssue(new FacilityValidationIssue(
+                    facility,
+                    "MISSING_FIELD",
+                    "Missing facilityName"
+            ));
+            missing = true;
+        }
+        if (isBlank(facility.getProvince())) {
+            result.addIssue(new FacilityValidationIssue(
+                    facility,
+                    "MISSING_FIELD",
+                    "Missing province"
+            ));
+            missing = true;
+        }
+
+        return missing;
+    }
+
+    private boolean hasDuplicateUniqueId(
+            Facility facility,
+            Set<String> duplicateUniqueIds,
+            FacilityValidationResult result
+    ) {
+        String uniqueId = safeTrim(facility.getUniqueId());
+        if (uniqueId != null && duplicateUniqueIds.contains(uniqueId)) {
+            result.addIssue(new FacilityValidationIssue(
+                    facility,
+                    "DUPLICATE_UNIQUE_ID",
+                    "Duplicate uniqueId: " + uniqueId
+            ));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean hasInvalidProvince(Facility facility, FacilityValidationResult result) {
+        String province = safeTrim(facility.getProvince());
+        if (province != null && !VALID_PROVINCES.contains(province)) {
+            result.addIssue(new FacilityValidationIssue(
+                    facility,
+                    "INVALID_PROVINCE",
+                    "Invalid province code: " + province
+            ));
+            return true;
+        }
+        return false;
+    }
+
+    private boolean hasInvalidCoordinatesAndReport(
+            Facility facility,
+            FacilityValidationResult result
+    ) {
+        if (hasInvalidCoordinates(facility)) {
+            result.addIssue(new FacilityValidationIssue(
+                    facility,
+                    "INVALID_COORDINATES",
+                    "Invalid or incomplete latitude/longitude"
+            ));
+            return true;
+        }
+        return false;
     }
 
     private boolean hasInvalidCoordinates(Facility facility) {
@@ -173,5 +217,12 @@ public class FacilityValidationService {
 
     private String safeTrim(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private static class ValidationCounters {
+        int missingFieldCount;
+        int duplicateCount;
+        int invalidProvinceCount;
+        int invalidCoordinateCount;
     }
 }

@@ -6,29 +6,7 @@ import 'leaflet/dist/leaflet.css';
 
 import MapView from './Map';
 import getAllFacilities, { getFacilitiesByProvince } from './services/facilitiesService';
-
-interface Facility {
-  id: number;
-  facilityName: string;
-  authorityName: string;
-  address: string;
-  unit: string;
-  postalCode: string;
-  municipalityName: string;
-  sourceId: string;
-  minGrade: string;
-  maxGrade: string;
-  facilityType: string;
-  province: string;
-  censusDivisionName: string;
-  censusDivisionId: string;
-  geometry: string;
-  languageMinorityStatus: boolean;
-  frenchImmersion: boolean;
-  earlyImmersion: boolean;
-  middleImmersion: boolean;
-  lateImmersion: boolean;
-}
+import { Facility } from './types/facility';
 
 type AgeRangeFilter = 'ALL' | 'PRIMARY' | 'SECONDARY' | 'K_12';
 type LanguageFilter = 'ALL' | 'ENGLISH' | 'FRENCH_IMMERSION';
@@ -150,9 +128,9 @@ const App: React.FC = () => {
     }
 
     const hasFrenchImmersion = facility.frenchImmersion
-    || facility.earlyImmersion
-    || facility.middleImmersion
-    || facility.lateImmersion;
+      || facility.earlyImmersion
+      || facility.middleImmersion
+      || facility.lateImmersion;
 
     if (filter === 'FRENCH_IMMERSION') {
       // Any French immersion option available

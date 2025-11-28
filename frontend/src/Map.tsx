@@ -8,33 +8,12 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-
-interface Facility {
-  id: number;
-  facilityName: string;
-  authorityName: string;
-  address: string;
-  unit: string;
-  postalCode: string;
-  municipalityName: string;
-  sourceId: string;
-  minGrade: string;
-  maxGrade: string;
-  facilityType: string;
-  province: string;
-  censusDivisionName: string;
-  censusDivisionId: string;
-  geometry: string;
-  languageMinorityStatus: boolean;
-  frenchImmersion: boolean;
-  earlyImmersion: boolean;
-  middleImmersion: boolean;
-  lateImmersion: boolean;
-}
+import { Facility } from './types/facility';
 
 interface MapViewProps {
   facilities: Facility[];
 }
+
 export function parseWktPoint(wkt: string): [number, number] | null {
   // Example input: "POINT (-53.9840877 47.7650123)"
   const match = wkt.match(/POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i);
