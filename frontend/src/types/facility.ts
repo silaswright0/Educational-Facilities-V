@@ -11,8 +11,8 @@ export interface Facility {
   maxGrade: string;
   facilityType: string;
   province: string;
-  censusDivisionName: string;
-  censusDivisionId: string;
+  censusSubdivisionName: string;
+  censusSubdivisionId: string;
   geometry: string;
   languageMinorityStatus: boolean;
   frenchImmersion: boolean;
