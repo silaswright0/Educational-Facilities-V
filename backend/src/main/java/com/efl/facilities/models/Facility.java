@@ -34,8 +34,8 @@ public class Facility {
     private Boolean middleImmersion;
     private Boolean lateImmersion;
 
-    private String censusDivisionName;
-    private String censusDivisionId;
+    private String censusSubdivisionName;
+    private String censusSubdivisionId;
     private String geometry;
     
     @Column(precision = 10, scale = 7)
@@ -101,11 +101,11 @@ public class Facility {
     public Boolean getLateImmersion() { return lateImmersion; }
     public void setLateImmersion(Boolean lateImmersion) { this.lateImmersion = lateImmersion; }
 
-    public String getCensusDivisionName() { return censusDivisionName; }
-    public void setCensusDivisionName(String censusDivisionName) { this.censusDivisionName = censusDivisionName; }
+    public String getCensusSubdivisionName() { return censusSubdivisionName; }
+    public void setCensusSubdivisionName(String censusSubdivisionName) { this.censusSubdivisionName = censusSubdivisionName; }
 
-    public String getCensusDivisionId() { return censusDivisionId; }
-    public void setCensusDivisionId(String censusDivisionId) { this.censusDivisionId = censusDivisionId; }
+    public String getCensusSubdivisionId() { return censusSubdivisionId; }
+    public void setCensusSubdivisionId(String censusSubdivisionId) { this.censusSubdivisionId = censusSubdivisionId; }
 
     public String getGeometry() { return geometry; }
     public void setGeometry(String geometry) { this.geometry = geometry; }

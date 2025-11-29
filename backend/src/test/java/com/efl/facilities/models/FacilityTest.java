@@ -22,7 +22,7 @@ class FacilityTest {
         f.setMunicipalityName("Waterloo");
         f.setPostalCode("N2L 3G1");
         f.setFrenchImmersion(false);
-        f.setCensusDivisionId("3523");
+        f.setCensusSubdivisionId("3523");
         f.setGeometry("POINT(-80.5 43.5)");
         f.setLongitude(new BigDecimal("-80.5000"));
         f.setLatitude(new BigDecimal("43.5000"));
@@ -38,7 +38,7 @@ class FacilityTest {
         f.setEarlyImmersion(Boolean.FALSE);
         f.setMiddleImmersion(Boolean.TRUE);
         f.setLateImmersion(Boolean.FALSE);
-        f.setCensusDivisionName("Waterloo Region");
+        f.setCensusSubdivisionName("Waterloo Region");
 
         assertEquals(99L, f.getId());
         assertEquals("SCH-999", f.getUniqueId());
@@ -49,7 +49,7 @@ class FacilityTest {
         assertEquals("Waterloo", f.getMunicipalityName());
         assertEquals("N2L 3G1", f.getPostalCode());
         assertFalse(f.getFrenchImmersion());
-        assertEquals("3523", f.getCensusDivisionId());
+        assertEquals("3523", f.getCensusSubdivisionId());
         assertEquals("POINT(-80.5 43.5)", f.getGeometry());
         assertEquals(new BigDecimal("-80.5000"), f.getLongitude());
         assertEquals(new BigDecimal("43.5000"), f.getLatitude());
@@ -64,6 +64,6 @@ class FacilityTest {
         assertEquals(Boolean.FALSE, f.getEarlyImmersion());
         assertEquals(Boolean.TRUE, f.getMiddleImmersion());
         assertEquals(Boolean.FALSE, f.getLateImmersion());
-        assertEquals("Waterloo Region", f.getCensusDivisionName());
+        assertEquals("Waterloo Region", f.getCensusSubdivisionName());
     }
 }

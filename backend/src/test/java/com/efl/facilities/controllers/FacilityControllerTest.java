@@ -62,7 +62,7 @@ class FacilityControllerTest {
         f.setAddress("123 Example St");
         f.setPostalCode("A1A 1A1");
         f.setFrenchImmersion(true);
-        f.setCensusDivisionId("3506");
+        f.setCensusSubdivisionId("3506");
         f.setGeometry("POINT(-79.3832 43.6532)");
         f.setLongitude(new BigDecimal("-79.3832"));
         f.setLatitude(new BigDecimal("43.6532"));
