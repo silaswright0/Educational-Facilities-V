@@ -39,11 +39,13 @@ services:  # Defines the services that make up the application
     depends_on:
       - database
     #Environment Variables: These are passed to the container at runtime. For example, DB_ADDRESS is set to jdbc:mysql://mysql:3306, indicating the application should connect to a MySQL database at the given JDBC URL.
+    env_file:
+      - .env
     environment:  # Environment variables for the Spring application
-      - DB_ADDRESS=jdbc:mysql://database:3306  # JDBC URL for the MySQL database, 'mysql' is the service name in docker-compose
-      - DB_DATABASE=template_db  # The name of the database to use
-      - DB_USER=root  # The username for the database
-      - DB_PASSWORD=pwd  # The password for the database
+      DB_ADDRESS: ${DB_ADDRESS:-jdbc:mysql://database:3306}  # JDBC URL for the MySQL database, 'mysql' is the service name in docker-compose
+      DB_DATABASE: ${MYSQL_DATABASE:-template_db}  # The name of the database to use
+      DB_USER: ${APP_DB_USER}  # The username for the database
+      DB_PASSWORD: ${APP_DB_PASSWORD}  # The password for the database
     #Networks: The service is attached to spring-mysql and spring-react networks, enabling network communication with the MySQL and React services.
     networks:  # Networks the Spring service is connected to
       - backend-database  # Network for communicating with MySQL
@@ -52,9 +54,13 @@ services:  # Defines the services that make up the application
   database:  # The MySQL database service
     build: ./database  # Builds the Docker image from the Dockerfile in the './mysql' directory
     #Environment Variables: Used to configure the MySQL server, like setting the root password (MYSQL_ROOT_PASSWORD) and specifying the database to create at startup (MYSQL_DATABASE).
+    env_file:
+      - .env
     environment:  # Environment variables for the MySQL service
-      - MYSQL_ROOT_PASSWORD=pwd  # The root password for MySQL
-      - MYSQL_DATABASE=template_db  # The database to create when the container starts
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}  # The root password for MySQL
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-template_db}  # The database to create when the container starts
+      APP_DB_USER: ${APP_DB_USER}  # Non-root user for application and ingestor
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}  # Password for non-root user
     #Volumes: volumes: - mariadb_data:/var/lib/mysql mounts the named volume mariadb_data to /var/lib/mysql inside the container, providing persistent storage for the database.
     volumes:  # Persistent storage for the MySQL database
       - mariadb_data:/var/lib/mysql  # Maps 'mariadb_data' volume to the data directory of MySQL
@@ -79,11 +85,13 @@ services:  # Defines the services that make up the application
     container_name: python_ingestor
     depends_on:
       - database
+    env_file:
+      - .env
     environment:
-      - DB_HOST=database
-      - DB_DATABASE=template_db
-      - DB_USER=root
-      - DB_PASSWORD=pwd
+      DB_HOST: ${DB_HOST:-database}
+      DB_DATABASE: ${MYSQL_DATABASE:-template_db}
+      DB_USER: ${APP_DB_USER}
+      DB_PASSWORD: ${APP_DB_PASSWORD}
     volumes:
       - ./ingestor/data:/usr/app/data
     networks:

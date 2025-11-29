@@ -34,7 +34,10 @@ public class Facility {
     private Boolean middleImmersion;
     private Boolean lateImmersion;
 
+    @Column(name = "census_subdivision_name")
     private String censusSubdivisionName;
+
+    @Column(name = "census_subdivision_id")
     private String censusSubdivisionId;
     private String geometry;
     

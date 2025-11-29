@@ -11,11 +11,21 @@ logger = logging.getLogger(__name__)
 
 class EducationalFacilityIngestor:
     def __init__(self):
+        db_host = os.environ.get('DB_HOST') or os.environ.get('DB_ADDRESS') or 'database'
+        db_database = os.environ.get('DB_DATABASE') or os.environ.get('MYSQL_DATABASE') or 'template_db'
+        db_user = os.environ.get('DB_USER')
+        db_password = os.environ.get('DB_PASSWORD')
+
+        if not db_user or not db_password:
+            raise ValueError("DB_USER and DB_PASSWORD must be set for the ingestor to connect securely.")
+        if db_user == 'root':
+            raise ValueError("Refusing to use DB_USER=root. Configure a least-privilege database user.")
+
         self.db_config = {
-            'host': os.environ.get('DB_ADDRESS', 'database'),
-            'user': os.environ.get('DB_USER', 'root'),
-            'password': os.environ.get('DB_PASSWORD', 'pwd'),
-            'database': os.environ.get('DB_DATABASE', 'template_db')
+            'host': db_host,
+            'user': db_user,
+            'password': db_password,
+            'database': db_database
         }
 
     def table_exists(self, conn, table_name):
