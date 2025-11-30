@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+
 import '@testing-library/jest-dom';
 import MapView, { parseWktPoint } from './Map';
 
@@ -22,7 +23,6 @@ describe('parseWktPoint', () => {
 // MapView basic tests
 // -----------------------------
 describe('MapView component (shallow/basic tests)', () => {
-
   const mockFacilities: any[] = []; // intentionally empty for simplicity
 
   it('renders without crashing', () => {
@@ -52,13 +52,13 @@ describe('MapView component (shallow/basic tests)', () => {
     expect(
       screen.getByRole('button', {
         name: /show french education choropleth/i,
-      })
+      }),
     ).toBeInTheDocument();
 
     expect(
       screen.getByRole('button', {
         name: /remove french education choropleth/i,
-      })
+      }),
     ).toBeInTheDocument();
   });
 
