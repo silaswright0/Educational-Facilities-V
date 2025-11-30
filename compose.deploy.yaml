@@ -76,6 +76,7 @@ services:  # Defines the services that make up the application
     environment:  # Environment variables for the React service
       - BACKEND_PROXY=http://backend:8080  # The URL to the backend Spring service
       - REACT_APP_API_URL=/api/facilities
+      - REACT_APP_API_URL_MUNICIPALITIES=/api/municipalities
     networks:  # Network the React service is connected to
       - backend-frontend  # Network for communicating with the backend service
       - swag-frontend # Network to allow reverse proxy to communicate with frontend
