@@ -5,7 +5,6 @@ This project provides visualizations for information about Canadian educational 
 
 ## How to run locally
 - Make sure you have docker desktop installed and running
-- Install requirments
 - docker compose build
 - docker compose up -d
 - check out the project at localhost:3000
